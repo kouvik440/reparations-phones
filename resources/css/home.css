@@ -1,0 +1,89 @@
+@import 'tailwindcss' source(none);
+@source '../js/Pages/Public/Home.jsx';
+
+@theme {
+    --font-sans: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+    --color-home-ground: #eef2f0;
+    --color-home-ink: #183b3b;
+    --color-home-muted: #526563;
+    --color-home-green: #123e3c;
+}
+@layer base {
+    :root { color-scheme: light; }
+    body { @apply m-0 bg-home-ground font-sans text-home-ink antialiased; }
+    a, summary { @apply focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-home-ink; }
+    html { scroll-padding-top: 1.5rem; }
+    p, dd { overflow-wrap: anywhere; }
+}
+
+@layer components {
+    .home-section { @apply grid gap-6 py-12 sm:py-20 lg:grid-cols-[1fr_2fr] lg:gap-16; }
+    .home-section-title { @apply text-3xl leading-tight font-semibold tracking-tight text-home-ink; }
+    .home-section-copy { @apply max-w-2xl text-base leading-7 text-home-muted; }
+}
+
+/* One frame and comfortable touch targets, starting at 320px. */
+@layer components {
+    .home-header, .home-desktop-nav, .home-main { width: min(100%, 1200px); margin-inline: auto; padding-inline: clamp(1rem, 4vw, 2.5rem); }
+    .home-header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding-block: 1rem; position: relative; z-index: 10; }
+    .home-header-actions { display: flex; align-items: center; gap: .75rem; }
+    .home-login { display: inline-flex; align-items: center; min-height: 44px; font-size: .875rem; font-weight: 600; white-space: nowrap; }
+    .home-login:hover { text-decoration: underline; text-underline-offset: 4px; }
+    .home-mobile-menu summary { min-width: 44px; display: flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; cursor: pointer; font-size: .875rem; font-weight: 600; list-style: none; }
+    .home-mobile-menu summary::-webkit-details-marker { display: none; }
+    .home-mobile-menu summary > span { display: none; }
+    .home-mobile-menu nav { position: absolute; inset-inline: 1rem; top: calc(100% - .25rem); background: #fff; padding: .75rem; }
+    .home-mobile-menu nav a { display: flex; align-items: center; min-height: 48px; padding: .5rem .75rem; font-weight: 500; }
+    .home-mobile-menu nav a:hover { background: var(--color-home-ground); }
+    .home-desktop-nav { display: none; }
+    .home-main { padding-top: .75rem; }
+    .home-hero { display: grid; background: white; }
+    .home-intro { padding: 2rem 1.25rem; display: flex; flex-direction: column; gap: 1.5rem; align-items: flex-start; min-width: 0; }
+    .home-intro h1 { font-size: clamp(2rem, 5.5vw, 4.25rem); line-height: 1.08; font-weight: 600; letter-spacing: -.045em; }
+    .home-intro h1 span { display: block; }
+    .home-lead { max-width: 40ch; font-size: 1rem; line-height: 1.75; }
+    .home-primary-action { display: grid; gap: .75rem; width: 100%; }
+    .home-track { display: inline-flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; min-height: 56px; background: var(--color-home-green); color: white; font-weight: 600; }
+    .home-track:hover { background: #1d5350; }
+    .home-ticket { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 1rem; align-content: center; padding: 1.5rem 1.25rem; background: var(--color-home-green); color: white; }
+    .home-ticket > svg { width: 32px; height: 36px; }
+    .home-ticket h2 { font-size: 1.25rem; font-weight: 500; line-height: 1.3; }
+    .home-ticket p { margin-top: .5rem; color: #deebe5; font-size: .875rem; line-height: 1.7; }
+    .home-statuses { grid-column: 2; display: flex; flex-wrap: wrap; gap: .4rem 1rem; color: #bfd4cc; font-size: .75rem; }
+    .home-section-title { font-size: clamp(1.75rem, 3vw, 2.5rem); }
+    #histoire .home-section-copy { max-width: 60ch; }
+    #services { display: block; }
+    #services > dl { max-width: none; margin-top: 2rem; display: grid; gap: 2rem; }
+    #services > dl > div { margin: 0; }
+    #services dt { font-size: 1.125rem; }
+    #contact { padding: 2rem 1.25rem; background: var(--color-home-green); color: white; }
+    #contact .home-section-title, #contact dt { color: white; }
+    #contact .home-section-copy { color: #deebe5; }
+    #contact dd { margin-top: .5rem; }
+    #questions summary { min-height: 48px; padding-block: .75rem; font-size: 1rem; line-height: 1.6; }
+    #questions details p { margin-top: .5rem; padding-bottom: .5rem; }
+    #questions .home-section-copy { width: 100%; }
+    @media (min-width: 640px) {
+        .home-mobile-menu summary > span { display: inline; }
+        .home-intro { padding: 3rem; gap: 2rem; }
+        .home-lead { font-size: 1.125rem; }
+        .home-primary-action { width: auto; }
+        .home-ticket { padding: 2rem 3rem; }
+        #services > dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.5rem 3rem; }
+        #contact { padding: 3rem; }
+    }
+    @media (min-width: 1024px) {
+        .home-header { padding-block: 1.5rem; }
+        .home-mobile-menu { display: none; }
+        .home-desktop-nav { display: flex; align-items: center; gap: 2rem; padding-bottom: 1rem; }
+        .home-main { padding-top: 1rem; }
+        .home-hero { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+        .home-intro { padding: 4rem 3rem; }
+        .home-ticket { grid-template-columns: 1fr; gap: 1.5rem; padding: 3rem; }
+        .home-ticket > svg { width: 48px; height: 48px; }
+        .home-ticket h2 { font-size: 2rem; max-width: 10ch; }
+        .home-ticket p { font-size: 1rem; margin-top: 1rem; }
+        .home-statuses { grid-column: 1; font-size: .875rem; }
+        #contact { grid-template-columns: 1fr 1.5fr; }
+    }
+}
