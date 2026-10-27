@@ -1,0 +1,8 @@
+import React from 'react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Title, Field, can } from '../../Components/UI';
+export default function CreateClient({ telephone = '' }) {
+    const page = usePage();
+    const form = useForm({ prenom: '', nom: '', telephone, piece_identite: '', next: can(page.props, 'repairs.create') ? 'repair' : 'profile' });
+    return <div className="max-w-3xl"><Head title="Créer un client" /><Link href="/clients" className="text-link mb-4">← Clients</Link><Title title="Créer un client" description="Renseignez les coordonnées nécessaires à la réception de son appareil." /><form className="panel" onSubmit={(event) => { event.preventDefault(); form.post('/clients'); }}><div className="grid gap-6 sm:grid-cols-2">{[['prenom', 'Prénom'], ['nom', 'Nom'], ['telephone', 'Téléphone'], ['piece_identite', 'Référence de la pièce d’identité']].map(([key, label]) => <Field key={key} name={key} label={label} value={form.data[key]} required maxLength={key === 'telephone' ? 40 : 255} type={key === 'telephone' ? 'tel' : 'text'} onChange={(event) => form.setData(key, event.target.value)} error={form.errors[key]} />)}</div>{can(page.props, 'repairs.create') && <div className="mt-6"><Field as="select" label="Après l’enregistrement" value={form.data.next} onChange={(e) => form.setData('next', e.target.value)}><option value="repair">Enregistrer un appareil</option><option value="profile">Ouvrir la fiche client</option></Field></div>}<div className="mt-7 flex flex-wrap gap-3"><button disabled={form.processing} className="button">{form.processing ? 'Enregistrement…' : 'Enregistrer le client'}</button><Link href="/clients" className="button-secondary">Annuler</Link></div></form></div>;
+}

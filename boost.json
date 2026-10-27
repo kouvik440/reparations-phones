@@ -1,0 +1,9 @@
+{
+    "agents": [
+        "codex"
+    ],
+    "skills": [
+        "tailwindcss-development",
+        "laravel-specialist"
+    ]
+}
