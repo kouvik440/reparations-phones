@@ -1,18 +1,4 @@
 <?php
-<<<<<<< HEAD
-namespace App\Http\Controllers;
-
-use App\Models\Reparation;
-use App\Models\Client;
-use Illuminate\Http\Request;
-
-class ReparationController extends Controller
-{
-    public function index()
-    {
-        $reparations = Reparation::with('client')->latest()->get();
-        return view('reparations.index', compact('reparations'));
-=======
 
 namespace App\Http\Controllers;
 
@@ -32,6 +18,33 @@ use Illuminate\Http\Response;
 
 class ReparationController extends Controller
 {
+    public function edit(Reparation $reparation): \Inertia\Response
+    {
+        return \Inertia\Inertia::render('Repairs/Create', [
+            'repair' => $reparation,
+            'client' => $reparation->client()->first(['id', 'prenom', 'nom', 'telephone']),
+            'brands' => DeviceBrand::with('deviceModels:id,device_brand_id,name')->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function update(\App\Http\Requests\UpdateRepairRequest $request, Reparation $reparation, \App\Actions\Reparations\UpdateRepair $update): RedirectResponse
+    {
+        $data = $request->validated();
+        if (! $request->user()->can('repairs.set_price')) {
+            unset($data['prix']);
+        }
+        $update->handle($reparation->id, $data);
+
+        return redirect()->route('reparations.show', $reparation)->with('success', 'Dossier modifié. Le code de suivi est conservé.');
+    }
+
+    public function destroy(Request $request, Reparation $reparation): RedirectResponse
+    {
+        $data = $request->validate(['confirmation' => ['required', 'string', \Illuminate\Validation\Rule::in([$reparation->code])]]);
+        $reparation->delete();
+
+        return redirect()->route('reparations.index')->with('success', 'Dossier supprimé. Son code de suivi n’est plus accessible.');
+    }
     public function index(Request $request)
     {
         $request->validate(['q' => 'nullable|string|max:100', 'statut' => 'nullable|in:all,en_attente,en_cours,termine,restitue', 'date' => 'nullable|date_format:Y-m-d']);
@@ -58,33 +71,15 @@ class ReparationController extends Controller
         $reparations = $query->orderByDesc('date_depot')->orderByDesc('id')->paginate(12)->withQueryString();
 
         return \Inertia\Inertia::render('Repairs/Index', compact('reparations', 'search', 'statut', 'stats'));
->>>>>>> version1
     }
 
     public function findClientForm()
     {
-<<<<<<< HEAD
-        return view('reparations.find-client');
-=======
         return \Inertia\Inertia::render('Repairs/FindClient', ['clients' => null, 'telephone' => '']);
->>>>>>> version1
     }
 
     public function findClient(Request $request)
     {
-<<<<<<< HEAD
-        $request->validate([
-            'telephone' => 'required'
-        ]);
-
-        $client = Client::where('telephone', $request->telephone)->first();
-
-        if (!$client) {
-            return back()->with('error', 'Aucun client trouvé avec ce numéro.');
-        }
-
-        return redirect()->route('clients.show', $client->id);
-=======
         $data = $request->validate([
             'telephone' => ['bail', 'required', 'string', 'max:40', 'regex:/^\+?[0-9\s().-]+$/', function ($attribute, $value, $fail) {
                 $length = strlen(preg_replace('/[^0-9]/', '', $value));
@@ -104,7 +99,6 @@ class ReparationController extends Controller
             ->withCount('reparations')->orderBy('nom')->orderBy('prenom')->get();
 
         return \Inertia\Inertia::render('Repairs/FindClient', compact('clients', 'telephone'));
->>>>>>> version1
     }
 
     public function create(Request $request)
@@ -114,36 +108,6 @@ class ReparationController extends Controller
             $client = Client::find($request->client_id);
         }
 
-<<<<<<< HEAD
-        return view('reparations.create', compact('client'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'marque' => 'required',
-            'modele' => 'required',
-            'probleme' => 'required',
-            'date_depot' => 'required|date'
-        ]);
-
-        Reparation::create($request->all());
-        return redirect()->route('reparations.index')->with('success', 'Réparation enregistrée');
-    }
-
-    public function updateStatut(Request $request, $id)
-    {
-        $request->validate([
-            'statut' => 'required|in:en_attente,en_cours,termine'
-        ]);
-
-        $reparation = Reparation::findOrFail($id);
-        $reparation->statut = $request->statut;
-        $reparation->save();
-
-        return back()->with('success', 'Statut mis à jour');
-=======
         $brands = DeviceBrand::with('deviceModels:id,device_brand_id,name')->orderBy('name')->get(['id', 'name']);
 
         return \Inertia\Inertia::render('Repairs/Create', compact('client', 'brands'));
@@ -201,7 +165,7 @@ class ReparationController extends Controller
     public function updateStatut(ChangeRepairStatusRequest $request, int $id, ChangeRepairStatus $changeStatus): JsonResponse|RedirectResponse
     {
         $data = $request->validated();
-        $repair = $changeStatus->handle($id, RepairStatus::from($data['statut']), (int) $data['status_version'], $request->user());
+        $repair = $changeStatus->handle($id, RepairStatus::from($data['statut']), (int) $data['status_version'], $request->user(), $data['date_retrait'] ?? null);
         if ($request->expectsJson()) {
             $request->session()->flash('success', 'Statut enregistré et historique mis à jour.');
 
@@ -209,6 +173,5 @@ class ReparationController extends Controller
         }
 
         return back()->with('success', 'Statut enregistré et historique mis à jour.');
->>>>>>> version1
     }
 }

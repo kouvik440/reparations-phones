@@ -3,32 +3,22 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-<<<<<<< HEAD
-    "keywords": ["laravel", "framework"],
-=======
     "keywords": [
         "laravel",
         "framework"
     ],
->>>>>>> version1
     "license": "MIT",
     "require": {
         "php": "^8.2",
         "doctrine/dbal": "^4.3",
-<<<<<<< HEAD
-=======
         "dompdf/dompdf": "^3.1",
         "inertiajs/inertia-laravel": "^2.0",
->>>>>>> version1
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-<<<<<<< HEAD
-=======
         "laravel/boost": "2.0",
->>>>>>> version1
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",
@@ -54,12 +44,8 @@
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-<<<<<<< HEAD
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-=======
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan boost:update --ansi"
->>>>>>> version1
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -90,12 +76,9 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
-<<<<<<< HEAD
-=======
         },
         "platform": {
             "php": "8.3.30"
->>>>>>> version1
         }
     },
     "minimum-stability": "stable",

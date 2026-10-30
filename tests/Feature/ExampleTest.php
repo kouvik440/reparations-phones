@@ -14,10 +14,6 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-<<<<<<< HEAD
-        $response->assertStatus(200);
-=======
         $response->assertOk()->assertPage('Public/Home');
->>>>>>> version1
     }
 }

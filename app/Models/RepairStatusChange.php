@@ -9,7 +9,7 @@ class RepairStatusChange extends Model
 {
     public const UPDATED_AT = null;
 
-    protected $fillable = ['user_id', 'actor_name', 'from_status', 'to_status', 'version', 'created_at'];
+    protected $fillable = ['date_retrait', 'previous_date_retrait', 'user_id', 'actor_name', 'from_status', 'to_status', 'version', 'created_at'];
 
     public function user(): BelongsTo
     {

@@ -18,6 +18,25 @@ class RepairWorkflowTest extends TestCase
     use RefreshDatabase;
     use \Tests\Concerns\CreatesDeviceCatalog;
 
+    public function test_withdrawal_date_can_be_set_corrected_and_cleared_on_reopening(): void
+    {
+        $repair = $this->repair();
+        $repair->update(['date_depot' => today()->subDays(5)->toDateString()]);
+        $this->actingAs(User::factory()->create());
+        $url = '/reparations/'.$repair->id.'/statut';
+        $this->putJson($url, ['statut' => 'restitue', 'status_version' => 0, 'date_retrait' => today()->subDay()->toDateString()])->assertOk();
+        $this->assertSame(today()->subDay()->toDateString(), $repair->fresh()->date_retrait);
+        $this->putJson($url, ['statut' => 'restitue', 'status_version' => 1, 'date_retrait' => today()->toDateString()])->assertOk();
+        $this->assertSame(today()->toDateString(), $repair->fresh()->date_retrait);
+        $this->assertDatabaseHas('repair_status_changes', ['reparation_id' => $repair->id, 'previous_date_retrait' => today()->subDay()->toDateString(), 'date_retrait' => today()->toDateString(), 'version' => 2]);
+        foreach ([today()->addDay()->toDateString(), today()->subDays(6)->toDateString(), 'invalid'] as $date) {
+            $this->putJson($url, ['statut' => 'restitue', 'status_version' => 2, 'date_retrait' => $date])->assertUnprocessable();
+        }
+        $this->putJson($url, ['statut' => 'restitue', 'status_version' => 1, 'date_retrait' => today()->subDay()->toDateString()])->assertConflict();
+        $this->putJson($url, ['statut' => 'en_cours', 'status_version' => 2])->assertOk();
+        $this->assertNull($repair->fresh()->date_retrait);
+    }
+
     private function repair(): Reparation
     {
         $client = Client::create(['prenom' => 'Client', 'nom' => 'Workflow', 'telephone' => '70000000', 'piece_identite' => 'PRIVE']);
@@ -25,7 +44,7 @@ class RepairWorkflowTest extends TestCase
         return Reparation::create(['client_id' => $client->id, 'marque' => 'Samsung', 'modele' => 'A10', 'probleme' => 'Panne', 'date_depot' => today()->toDateString(), 'statut' => 'en_attente']);
     }
 
-    public function test_forward_transitions_record_actor_time_and_history_and_delivered_is_final(): void
+    public function test_forward_transitions_record_history_and_delivered_can_be_reopened(): void
     {
         $actor = User::factory()->create(['name' => 'Technicien Atelier']);
         $repair = $this->repair();
@@ -42,26 +61,34 @@ class RepairWorkflowTest extends TestCase
         $this->assertSame('en_attente', $repair->statusChanges()->where('version', 1)->first()->from_status);
         $this->assertSame('termine', $repair->statusChanges()->first()->from_status);
         $this->get('/reparations/'.$repair->id)->assertOk()->assertPage('Repairs/Show')->assertPageProp('history.data.0.actor_name', 'Technicien Atelier')->assertPageProp('reparation.statut', 'restitue');
-        $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_cours', 'status_version' => 3])->assertUnprocessable();
-        $this->assertDatabaseCount('repair_status_changes', 3);
+        $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_cours', 'status_version' => 3])->assertOk();
+        $this->assertSame('en_cours', $repair->fresh()->statut);
+        $this->assertDatabaseHas('repair_status_changes', ['reparation_id' => $repair->id, 'from_status' => 'restitue', 'to_status' => 'en_cours', 'version' => 4]);
+        $this->assertDatabaseCount('repair_status_changes', 4);
     }
 
-    public function test_skipped_reverse_and_unknown_transitions_are_rejected_without_audit_or_mutation(): void
+    public function test_all_status_pairs_are_allowed_but_invalid_input_is_rejected(): void
     {
         $repair = $this->repair();
         $this->actingAs(User::factory()->create());
-        foreach (['termine', 'restitue', 'inconnu'] as $status) {
-            $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => $status, 'status_version' => 0])->assertUnprocessable();
-        }
+        $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'inconnu', 'status_version' => 0])->assertUnprocessable();
         $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_cours'])->assertUnprocessable();
         $this->assertSame('en_attente', $repair->fresh()->statut);
         $this->assertDatabaseCount('repair_status_changes', 0);
         $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_attente', 'status_version' => 0])->assertOk();
         $this->assertDatabaseCount('repair_status_changes', 0);
-        $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_cours', 'status_version' => 0])->assertOk();
-        $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => 'en_attente', 'status_version' => 1])->assertUnprocessable();
-        $this->assertSame('en_cours', $repair->fresh()->statut);
-        $this->assertDatabaseCount('repair_status_changes', 1);
+        foreach (RepairStatus::cases() as $from) {
+            foreach (RepairStatus::cases() as $to) {
+                $repair->refresh();
+                $repair->forceFill(['statut' => $from->value, 'date_retrait' => $from === RepairStatus::Delivered ? today()->toDateString() : null])->save();
+                $version = $repair->status_version;
+                $count = $repair->statusChanges()->count();
+                $this->putJson('/reparations/'.$repair->id.'/statut', ['statut' => $to->value, 'status_version' => $version])->assertOk()->assertJsonPath('statut', $to->value);
+                $this->assertSame($to->value, $repair->refresh()->statut);
+                $this->assertSame($version + (int) ($from !== $to), $repair->status_version);
+                $this->assertSame($count + (int) ($from !== $to), $repair->statusChanges()->count());
+            }
+        }
     }
 
     public function test_stale_or_duplicate_request_cannot_overwrite_a_change(): void

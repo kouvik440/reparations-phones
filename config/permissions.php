@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'repairs.edit' => ['group' => 'Réparations', 'label' => 'Modifier un dossier', 'description' => 'Corriger le client, l’appareil, la panne et la date du dépôt.', 'requires' => ['repairs.view']],
+    'repairs.delete' => ['group' => 'Réparations', 'label' => 'Supprimer un dossier', 'description' => 'Retirer un dossier des listes et du suivi public.', 'requires' => ['repairs.view']],
     'catalog.manage' => ['group' => 'Catalogue', 'label' => 'Gérer les marques et modèles', 'description' => 'Créer, renommer et supprimer les éléments non utilisés du catalogue.', 'requires' => []],
     'dashboard.view' => ['group' => 'Tableau de bord', 'label' => 'Consulter les indicateurs', 'description' => 'Voir les compteurs et graphiques globaux de l’atelier.', 'requires' => []],
     'clients.view' => ['group' => 'Clients', 'label' => 'Consulter les clients', 'description' => 'Accéder au répertoire et aux coordonnées des clients.', 'requires' => []],

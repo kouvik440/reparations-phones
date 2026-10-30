@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dashboard-design · Mars</title>
+<meta name="description" content="Agent skill for building production-quality data dashboards in HTML or React. KPI cards, charts, filters, tables, and CSV export — with two built-in style presets.">
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=geist:400,500,600&family=geist-mono:400,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #080808;
+  --surface:  #0f0f0f;
+  --surface2: #141414;
+  --border:   #1f1f1f;
+  --border2:  #2a2a2a;
+  --text:     #ededed;
+  --muted:    #737373;
+  --subtle:   #404040;
+  --accent:   #06b6d4;
+  --accent-d: rgba(6,182,212,0.1);
+  --good:     #34d399;
+  --amber:    #f59e0b;
+  --sans:     'Geist', system-ui, sans-serif;
+  --mono:     'Geist Mono', 'Cascadia Code', monospace;
+  --r:        6px;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans); font-size: 14px; line-height: 1.65;
+  color: var(--text); background: var(--bg); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* TOPBAR */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  height: 44px; background: rgba(8,8,8,0.85);
+  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 24px;
+}
+.topbar-logo {
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
+  color: var(--text); letter-spacing: -0.01em;
+  display: flex; align-items: center; gap: 8px;
+}
+.topbar-logo svg { color: var(--accent); }
+.topbar-sep { color: var(--border2); font-family: var(--mono); font-size: 12px; }
+.topbar-crumb { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.topbar-crumb:hover { color: var(--text); }
+.topbar-crumb.active { color: var(--text); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.topbar-badge {
+  font-family: var(--mono); font-size: 10px;
+  padding: 2px 8px; border-radius: 20px;
+  background: var(--accent-d); color: var(--accent);
+  border: 1px solid rgba(6,182,212,0.25); letter-spacing: 0.04em;
+}
+
+/* LAYOUT */
+.page { padding-top: 44px; max-width: 960px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+
+/* HERO */
+.hero { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+.hero-breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  margin-bottom: 20px; display: flex; align-items: center; gap: 6px;
+}
+.hero-breadcrumb span { color: var(--border2); }
+.hero-title { font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 12px; }
+.hero-title .dim { color: var(--muted); }
+.hero-sub { font-size: 14px; color: var(--muted); line-height: 1.8; max-width: 580px; margin-bottom: 28px; }
+
+.install-box {
+  display: inline-flex; align-items: center;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r); overflow: hidden; margin-bottom: 32px;
+}
+.install-label { padding: 10px 14px; font-family: var(--mono); font-size: 12px; color: var(--muted); border-right: 1px solid var(--border2); }
+.install-cmd { padding: 10px 16px; font-family: var(--mono); font-size: 13px; color: var(--text); cursor: text; user-select: all; }
+.install-copy {
+  padding: 10px 14px; background: none; border: none; border-left: 1px solid var(--border2);
+  color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--mono);
+  transition: color 0.15s, background 0.15s;
+}
+.install-copy:hover { color: var(--text); background: var(--surface2); }
+
+.hero-meta { display: flex; gap: 24px; flex-wrap: wrap; }
+.hero-stat { display: flex; flex-direction: column; gap: 2px; }
+.hero-stat-val { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--text); letter-spacing: -0.02em; }
+.hero-stat-key { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* PRESETS PILLS */
+.preset-row { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+.preset-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--r);
+  border: 1px solid var(--border2); background: var(--surface);
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+}
+.preset-swatch { width: 10px; height: 10px; border-radius: 50%; }
+.preset-pill .sub { color: var(--muted); font-size: 11px; margin-left: 4px; }
+
+/* TWO-COL */
+.two-col { display: grid; grid-template-columns: 1fr 280px; gap: 40px; padding: 40px 0 80px; align-items: start; }
+
+/* MAIN COL */
+.summary-section { margin-bottom: 40px; }
+.section-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 12px; }
+.summary-text { font-size: 14px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
+.summary-bullets { display: flex; flex-direction: column; gap: 8px; }
+.summary-bullet { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.summary-bullet::before { content: '→'; color: var(--accent); flex-shrink: 0; margin-top: 1px; font-family: var(--mono); font-size: 12px; }
+
+/* FILES TABLE */
+.files-table { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 32px; }
+.files-header { display: grid; grid-template-columns: 1fr 1fr; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.file-row { display: grid; grid-template-columns: 1fr 1fr; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.12s; }
+.file-row:last-child { border-bottom: none; }
+.file-row:hover { background: var(--surface2); }
+.file-name { font-family: var(--mono); font-size: 12px; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+.file-name svg { color: var(--muted); flex-shrink: 0; }
+.file-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.file-tag { font-family: var(--mono); font-size: 9px; padding: 1px 5px; border-radius: 3px; background: var(--accent-d); color: var(--accent); border: 1px solid rgba(6,182,212,0.2); margin-left: 6px; }
+
+/* RULES TABLE */
+.rules-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+.rules-table thead th { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 400; }
+.rules-table tbody tr { border-bottom: 1px solid var(--border); }
+.rules-table tbody tr:last-child { border-bottom: none; }
+.rules-table tbody tr:hover { background: var(--surface2); }
+.rules-table td { padding: 9px 12px; font-size: 12px; color: var(--muted); vertical-align: top; line-height: 1.5; }
+.rules-table td:first-child { font-family: var(--mono); color: var(--text); white-space: nowrap; }
+code { font-family: var(--mono); font-size: 11px; background: var(--surface2); border: 1px solid var(--border2); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+
+/* PRINCIPLES */
+.principles { margin-bottom: 32px; }
+.principle { display: grid; grid-template-columns: 32px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: baseline; }
+.principle:last-child { border-bottom: none; }
+.principle-num { font-family: var(--mono); font-size: 10px; color: var(--accent); font-weight: 500; letter-spacing: 0.06em; }
+.principle-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
+.principle-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* CHECKLIST */
+.checklist { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.checklist-header { padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); line-height: 1.5; cursor: pointer; transition: background 0.12s; }
+.checklist-item:last-child { border-bottom: none; }
+.checklist-item:hover { background: var(--surface2); }
+.checklist-item.checked { color: var(--subtle); }
+.checklist-item.checked .check-box { background: var(--accent-d); border-color: var(--accent); }
+.checklist-item.checked .check-box::after { opacity: 1; }
+.check-box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border2); flex-shrink: 0; margin-top: 1px; position: relative; transition: all 0.12s; }
+.check-box::after { content: ''; position: absolute; top: 2px; left: 4px; width: 4px; height: 7px; border-right: 1.5px solid var(--accent); border-bottom: 1.5px solid var(--accent); transform: rotate(45deg); opacity: 0; transition: opacity 0.12s; }
+
+/* SIDEBAR */
+.sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 60px; }
+.sidebar-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; overflow: hidden; }
+.sidebar-card-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.agent-list { display: flex; flex-direction: column; gap: 6px; }
+.agent-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--surface2); border-radius: 4px; }
+.agent-name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.agent-badge { font-family: var(--mono); font-size: 9px; padding: 2px 6px; border-radius: 3px; background: rgba(52,211,153,0.1); color: var(--good); border: 1px solid rgba(52,211,153,0.2); }
+.install-steps { display: flex; flex-direction: column; gap: 10px; }
+.install-step { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: flex-start; }
+.step-num { font-family: var(--mono); font-size: 10px; color: var(--accent); width: 20px; height: 20px; background: var(--accent-d); border-radius: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.step-text code { font-family: var(--mono); font-size: 11px; background: var(--surface2); border: 1px solid var(--border2); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+.security-list { display: flex; flex-direction: column; gap: 5px; }
+.security-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--muted); padding: 4px 0; }
+.security-pass { font-family: var(--mono); font-size: 10px; color: var(--good); background: rgba(52,211,153,0.08); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(52,211,153,0.15); }
+.alt-install { font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; line-height: 1.7; margin-top: 4px; }
+.alt-install .cmd { color: var(--accent); }
+
+/* FOOTER */
+.footer { border-top: 1px solid var(--border); padding: 24px 0 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.footer-left { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.footer-right { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; gap: 16px; }
+.footer-right a:hover { color: var(--text); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.hero, .two-col { animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+.two-col { animation-delay: 0.06s; }
+
+@media (max-width: 720px) {
+  .two-col { grid-template-columns: 1fr; }
+  .sidebar { position: static; }
+  .hero { padding: 40px 0 32px; }
+  .hero-title { font-size: 22px; }
+  .topbar-crumb:not(.active) { display: none; }
+  .topbar-sep { display: none; }
+  .install-box { flex-direction: column; width: 100%; }
+  .install-label { border-right: none; border-bottom: 1px solid var(--border2); width: 100%; }
+  .install-copy { border-left: none; border-top: 1px solid var(--border2); }
+}
+</style>
+</head>
+<body>
+
+<nav class="topbar" aria-label="Breadcrumb">
+  <div class="topbar-logo">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    skills
+  </div>
+  <span class="topbar-sep">/</span>
+  <a href="#" class="topbar-crumb">mars</a>
+  <span class="topbar-sep">/</span>
+  <a href="#" class="topbar-crumb active">dashboard-design</a>
+  <div class="topbar-right">
+    <span class="topbar-badge">v2.1.0</span>
+  </div>
+</nav>
+
+<main class="page">
+
+  <section class="hero">
+    <div class="hero-breadcrumb">
+      <span>skills</span><span>/</span><span>mars</span><span>/</span>
+      <span style="color:var(--text);">dashboard-design</span>
+    </div>
+
+    <h1 class="hero-title">dashboard&#8209;design <span class="dim">skill</span></h1>
+
+    <p class="hero-sub">
+      Build production-quality data dashboards in a single HTML file or as a React component. KPI cards with real deltas, 5 chart types, filter systems, sortable paginated tables, and CSV export — with three built-in style presets and a motion system.
+    </p>
+
+    <div class="preset-row">
+      <div class="preset-pill">
+        <div class="preset-swatch" style="background:#06b6d4"></div>
+        <span>dark-terminal</span>
+        <span class="sub">default</span>
+      </div>
+      <div class="preset-pill">
+        <div class="preset-swatch" style="background:#0f62fe"></div>
+        <span>carbon-light</span>
+        <span class="sub">IBM Carbon</span>
+      </div>
+      <div class="preset-pill">
+        <div class="preset-swatch" style="background:#111827;border:1px solid #e5e7eb"></div>
+        <span>neutral-bw</span>
+        <span class="sub">Tailwind grays</span>
+      </div>
+    </div>
+
+    <div class="install-box">
+      <span class="install-label">$ </span>
+      <span class="install-cmd" id="install-cmd">npx skills add Judiedesigns/dashboard-design-skill</span>
+      <button class="install-copy" onclick="copyInstall()" id="copy-btn" aria-label="Copy install command">copy</button>
+    </div>
+
+    <div class="hero-meta">
+      <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-key">skill files</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">3</div><div class="hero-stat-key">style presets</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">HTML + React</div><div class="hero-stat-key">output formats</div></div>
+      <div class="hero-stat"><div class="hero-stat-val" style="color:var(--good);">MIT</div><div class="hero-stat-key">license</div></div>
+    </div>
+  </section>
+
+  <div class="two-col">
+    <div class="main-col">
+
+      <!-- SUMMARY -->
+      <div class="summary-section">
+        <div class="section-label">What this skill does</div>
+        <p class="summary-text">Teaches an AI agent to build complete, working dashboards — not just pretty screenshots. Every output includes real calculated data, wired-up interactions, and correct component states.</p>
+        <div class="summary-bullets">
+          <div class="summary-bullet">Outputs a single HTML file (Chart.js) or a React JSX component (Recharts) — you pick per prompt</div>
+          <div class="summary-bullet">Three style presets: <code>dark-terminal</code> (electric cyan on near-black), <code>carbon-light</code> (IBM Carbon Design System), and <code>neutral-bw</code> (pure Tailwind gray scale, black accent — works for any brand)</div>
+          <div class="summary-bullet">Motion system with easing tokens, duration tokens, hover states, entry animations, and skeleton loading — especially important for neutral-bw where color doesn't carry interactivity signals</div>
+          <div class="summary-bullet">Enforces correct KPI delta calculation from prior period data — no random numbers</div>
+          <div class="summary-bullet">Wires up pagination, sort indicators, empty states, and CSV export that actually works</div>
+          <div class="summary-bullet">Charts update in place on filter change — no destroy/recreate flicker</div>
+        </div>
+      </div>
+
+      <!-- FILES -->
+      <div class="summary-section">
+        <div class="section-label">Skill files</div>
+        <div class="files-table">
+          <div class="files-header"><span>File</span><span>Covers</span></div>
+          <div class="file-row">
+            <div class="file-name">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              SKILL.md
+            </div>
+            <div class="file-desc">Core rules, chart decision tree, KPI anatomy, filter + export patterns, common mistakes</div>
+          </div>
+          <div class="file-row">
+            <div class="file-name">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              references/html.md
+              <span class="file-tag">read for HTML</span>
+            </div>
+            <div class="file-desc">Complete HTML template, CSS tokens, Chart.js configs, sparkline helper, responsive breakpoints</div>
+          </div>
+          <div class="file-row">
+            <div class="file-name">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              references/react.md
+              <span class="file-tag">read for React</span>
+            </div>
+            <div class="file-desc">React component structure, Recharts configs for all 5 chart types, hooks, animated counter</div>
+          </div>
+          <div class="file-row">
+            <div class="file-name">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              references/styles.md
+            </div>
+            <div class="file-desc">Token tables for <code>dark-terminal</code>, <code>carbon-light</code>, and <code>neutral-bw</code> — colors, fonts, spacing, typography scale</div>
+          </div>
+          <div class="file-row">
+            <div class="file-name">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              references/motion.md
+              <span class="file-tag">new</span>
+            </div>
+            <div class="file-desc">Easing tokens, duration tokens, hover states, entry animations, counter animation, skeleton loading, chart transitions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART TYPES -->
+      <div class="summary-section">
+        <div class="section-label">Chart selection guide</div>
+        <table class="rules-table" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+          <thead><tr><th>Data question</th><th>Chart type</th></tr></thead>
+          <tbody>
+            <tr><td>How does X change over time?</td><td>Line chart with gradient fill</td></tr>
+            <tr><td>Compare quantities across categories</td><td>Grouped or stacked bar chart</td></tr>
+            <tr><td>What's the part-to-whole breakdown?</td><td>Donut — max 5 segments</td></tr>
+            <tr><td>Relationship between two variables?</td><td>Scatter plot</td></tr>
+            <tr><td>Multiple streams over time?</td><td>Stacked area chart</td></tr>
+            <tr><td>Single number that matters most?</td><td>KPI card — not a chart</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- MISTAKES -->
+      <div class="summary-section">
+        <div class="section-label">Common mistakes the skill prevents</div>
+        <table class="rules-table" style="border:1px solid var(--border);border-radius:var(--r);overflow:hidden">
+          <thead><tr><th>Mistake</th><th>What the skill does instead</th></tr></thead>
+          <tbody>
+            <tr><td>Random KPI deltas</td><td>Calculate from prior quarter in the same dataset</td></tr>
+            <tr><td>Static pagination HTML</td><td>Wire <code>tablePage</code> state to click handlers dynamically</td></tr>
+            <tr><td>Destroy + recreate charts on filter</td><td><code>chart.update('active')</code> — smooth transition in place</td></tr>
+            <tr><td>Exporting full raw data</td><td>Export only the currently filtered dataset</td></tr>
+            <tr><td>Blank table on no results</td><td>Show "No records match filters" empty state</td></tr>
+            <tr><td><code>Math.random()</code> in visible output</td><td>Pre-generate all data at init — never randomise on render</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PRINCIPLES -->
+      <div class="summary-section">
+        <div class="section-label">Non-negotiable rules</div>
+        <div class="principles">
+          <div class="principle">
+            <div class="principle-num">01</div>
+            <div class="principle-body">
+              <div class="principle-title">Layout order is always fixed</div>
+              <div class="principle-desc">Sticky header → filter bar → KPI row → charts → table. Never put a chart above the KPIs.</div>
+            </div>
+          </div>
+          <div class="principle">
+            <div class="principle-num">02</div>
+            <div class="principle-body">
+              <div class="principle-title">All numbers use monospace font</div>
+              <div class="principle-desc">KPI values, table cells, axis labels, badge text — everything numeric uses <code>font-family: monospace</code>. Proportional digits misalign in columns.</div>
+            </div>
+          </div>
+          <div class="principle">
+            <div class="principle-num">03</div>
+            <div class="principle-body">
+              <div class="principle-title">One update() function rules all filters</div>
+              <div class="principle-desc">Every filter change calls a single <code>update()</code> that re-renders KPIs, all charts, and the table simultaneously. No partial updates.</div>
+            </div>
+          </div>
+          <div class="principle">
+            <div class="principle-num">04</div>
+            <div class="principle-body">
+              <div class="principle-title">KPI weight is light, not bold</div>
+              <div class="principle-desc">Primary KPI value: font-weight 300. Large numbers in bold look cheap. Large numbers in light weight look premium.</div>
+            </div>
+          </div>
+          <div class="principle">
+            <div class="principle-num">05</div>
+            <div class="principle-body">
+              <div class="principle-title">Three component states minimum</div>
+              <div class="principle-desc">Every data component needs: <code>loading</code>, <code>empty-filtered</code>, and <code>live</code>. Never design only the happy path.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHECKLIST -->
+      <div class="summary-section">
+        <div class="section-label">Review checklist</div>
+        <div class="checklist">
+          <div class="checklist-header">Click to check off before shipping</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>KPI deltas are calculated from real prior period data</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Pagination buttons have click handlers wired up</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Empty state shows when filters return 0 results</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>CSV export downloads the filtered dataset, not full RAW</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>All numeric columns use monospace font</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Charts use chart.update() — not destroy + recreate</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Sort indicators update correctly (↑ ↓ ↕)</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>All charts have custom legends (Chart.js default disabled)</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Table is horizontally scrollable on mobile</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>KPI grid collapses to 2-col at 768px</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>No Math.random() in any visible render path</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Bar chart Y-axis starts at zero</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Donut chart has 5 or fewer segments</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Every interactive element has a visible hover state</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>Buttons animate on press (scale or translateY)</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>KPI counters animate up on load and filter change</div>
+          <div class="checklist-item" onclick="toggle(this)"><div class="check-box"></div>neutral-bw: border color also shifts on hover (not just background)</div>
+        </div>
+      </div>
+
+    </div><!-- /main-col -->
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-label">Install</div>
+        <div class="install-steps">
+          <div class="install-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Install via skills CLI:<br><code>npx skills add Judiedesigns/dashboard-design-skill</code></div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Or via npm:<br><code>npm install dashboard-design-skill</code></div>
+          </div>
+          <div class="install-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Skill installs to your agent's <code>/skills</code> directory automatically.</div>
+          </div>
+        </div>
+        <div class="alt-install" style="margin-top:14px;">
+          <span style="color:var(--muted)"># From GitHub directly</span><br>
+          <span class="cmd">npx skills add</span><br>
+          <span class="cmd">  github:Judiedesigns/dashboard-design-skill</span>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-label">Example prompts</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px;line-height:1.7;">"Build a sales dashboard in HTML using the <span style="color:var(--text);">dark-terminal preset</span> with revenue, orders, and AOV KPIs."</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px;line-height:1.7;">"Create a React analytics dashboard using <span style="color:var(--text);">carbon-light style</span> with filters for region and date range."</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px;line-height:1.7;">"Build a <span style="color:var(--text);">neutral-bw</span> HTML dashboard for a law firm — no color, just clean black and white with smooth hover states."</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-label">Supported agents</div>
+        <div class="agent-list">
+          <div class="agent-row"><span class="agent-name">Claude Code</span><span class="agent-badge">✓ supported</span></div>
+          <div class="agent-row"><span class="agent-name">Cursor</span><span class="agent-badge">✓ supported</span></div>
+          <div class="agent-row"><span class="agent-name">Codex</span><span class="agent-badge">✓ supported</span></div>
+          <div class="agent-row"><span class="agent-name">Windsurf</span><span class="agent-badge">✓ supported</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-label">Security</div>
+        <div class="security-list">
+          <div class="security-row"><span>No executable code</span><span class="security-pass">Pass</span></div>
+          <div class="security-row"><span>No network requests</span><span class="security-pass">Pass</span></div>
+          <div class="security-row"><span>Read-only instructions</span><span class="security-pass">Pass</span></div>
+          <div class="security-row"><span>MIT licensed</span><span class="security-pass">Pass</span></div>
+        </div>
+      </div>
+
+      <div class="sidebar-card">
+        <div class="sidebar-card-label">Repository</div>
+        <a href="https://github.com/Judiedesigns/dashboard-design-skill" target="_blank"
+          style="display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--accent);">
+          <span>Judiedesigns/dashboard-design-skill</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;">
+          Part of the <span style="color:var(--text);">Mars skills collection</span> — production-ready agent skills for UI and data work.
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-left">dashboard-design · v2.1.0 · MIT</div>
+    <div class="footer-right">
+      <a href="https://github.com/Judiedesigns/dashboard-design-skill">GitHub</a>
+      <a href="https://www.npmjs.com/package/dashboard-design-skill">npm</a>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+function toggle(el) { el.classList.toggle('checked'); }
+function copyInstall() {
+  navigator.clipboard.writeText(document.getElementById('install-cmd').textContent).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'copied!'; btn.style.color = 'var(--good)';
+    setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 2000);
+  });
+}
+</script>
+</body>
+</html>

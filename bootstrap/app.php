@@ -11,12 +11,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-<<<<<<< HEAD
-        //
-    })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        //
-=======
         $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request): string => route($request->user()->landingRoute()));
         $middleware->web(append: [\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\HandleInertiaRequests::class]);
     })
@@ -39,5 +33,4 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return $response;
         });
->>>>>>> version1
     })->create();

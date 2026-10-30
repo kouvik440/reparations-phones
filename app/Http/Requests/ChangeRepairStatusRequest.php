@@ -15,6 +15,6 @@ class ChangeRepairStatusRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['statut' => ['required', Rule::enum(RepairStatus::class)], 'status_version' => ['required', 'integer', 'min:0']];
+        return ['statut' => ['required', Rule::enum(RepairStatus::class)], 'status_version' => ['required', 'integer', 'min:0'], 'date_retrait' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today']];
     }
 }

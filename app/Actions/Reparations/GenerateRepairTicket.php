@@ -16,8 +16,8 @@ final class GenerateRepairTicket
         $options->setIsJavascriptEnabled(false);
         $pdf = new Dompdf($options);
         $pdf->loadHtml(view('reparations.ticket', ['repair' => $repair])->render(), 'UTF-8');
-        // Receipt format: 80 × 120 mm, independent of the browser's print settings.
-        $pdf->setPaper([0, 0, 226.77, 340.16]);
+        // Adhesive label: 50 x 30 mm, printed at actual size.
+        $pdf->setPaper([0, 0, 141.73, 85.04]);
         $pdf->render();
 
         return $pdf->output();

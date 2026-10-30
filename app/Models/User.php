@@ -2,15 +2,9 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-=======
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
->>>>>>> version1
 
 class User extends Authenticatable
 {
@@ -24,10 +18,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-<<<<<<< HEAD
-=======
         'is_active',
->>>>>>> version1
     ];
 
     /**
@@ -45,28 +36,14 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
-<<<<<<< HEAD
-=======
             'is_active' => 'boolean',
             'session_version' => 'integer',
             'last_login_at' => 'datetime',
->>>>>>> version1
         ];
     }
 
     /**
      * Vérifie si l'utilisateur est un administrateur.
-<<<<<<< HEAD
-     *
-     * @return bool
-     */
-
-      public function admin()
-        {
-            return view('admin.index'); // ou autre
-        }
-
-=======
      */
     public function roleDefinition(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -118,14 +95,9 @@ class User extends Authenticatable
 
         return 'access.pending';
     }
->>>>>>> version1
 
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> version1
 }

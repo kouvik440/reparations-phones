@@ -1,23 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-<<<<<<< HEAD
-use App\Models\Client;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-class ClientController extends Controller
-{
-    public function index()
-    {
-        $clients = Client::all();
-        return view('clients.index', compact('clients'));
-    }
-
-    public function create()
-    {
-        return view('clients.create');
-=======
 
 use App\Models\Client;
 use Illuminate\Http\Request;
@@ -67,22 +50,10 @@ class ClientController extends Controller
         $data = $request->validate(['telephone' => 'nullable|string|max:40']);
 
         return \Inertia\Inertia::render('Clients/Create', ['telephone' => $data['telephone'] ?? '']);
->>>>>>> version1
     }
 
     public function store(Request $request)
     {
-<<<<<<< HEAD
-        $request->validate([
-            'prenom' => 'required',
-            'nom' => 'required',
-            'telephone' => 'required|unique:clients',
-            'piece_identite' => 'required',
-        ]);
-
-        Client::create($request->all());
-        return redirect()->route('clients.index')->with('success', 'Client enregistré');
-=======
         $request->merge([
             'prenom' => trim((string) $request->input('prenom', '')),
             'nom' => trim((string) $request->input('nom', '')),
@@ -113,19 +84,13 @@ class ClientController extends Controller
             ? redirect()->route('reparations.create', ['client_id' => $client->id])
             : redirect()->route('clients.show', $client))
             ->with('success', 'Client enregistré. Vous pouvez maintenant ajouter un dépôt.');
->>>>>>> version1
     }
 
     public function show(Client $client)
     {
-<<<<<<< HEAD
-        $reparations = $client->reparations()->latest()->get();
-        return view('clients.show', compact('client', 'reparations'));
-=======
         $reparations = $client->reparations()->select('id', 'client_id', 'code', 'marque', 'modele', 'probleme', 'date_depot', 'statut')->latest('id')->paginate(10)->withQueryString();
         $client->loadCount(['reparations', 'reparations as active_count' => fn ($q) => $q->whereIn('statut', ['en_attente', 'en_cours'])]);
 
         return \Inertia\Inertia::render('Clients/Show', compact('client', 'reparations'));
->>>>>>> version1
     }
 }

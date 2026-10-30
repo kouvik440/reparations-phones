@@ -6,9 +6,6 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-<<<<<<< HEAD
-    //
-=======
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,5 +25,4 @@ abstract class TestCase extends BaseTestCase
             return $this;
         });
     }
->>>>>>> version1
 }

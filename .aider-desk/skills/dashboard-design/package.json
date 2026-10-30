@@ -1,0 +1,11 @@
+{
+  "name": "dashboard-design-skill",
+  "version": "2.1.0",
+  "description": "Agent skill for building production-quality data dashboards in HTML or React. KPI cards, 5 chart types, filter systems, sortable paginated tables, CSV export — with three style presets.",
+  "author": "Mars",
+  "license": "MIT",
+  "keywords": ["skill","agent-skill","dashboard","dashboard-design","ui","html","react","claude-code","cursor","codex"],
+  "scripts": { "postinstall": "node install-skill.js" },
+  "files": ["skills/","SKILL.md","install-skill.js","uninstall-skill.js"],
+  "engines": { "node": ">=16.0.0" }
+}

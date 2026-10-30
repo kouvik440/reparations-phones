@@ -108,6 +108,8 @@ class DeviceCatalogTest extends TestCase
             ->assertHeader('Content-Type', 'application/pdf')
             ->assertHeader('Content-Disposition', 'attachment; filename="ticket-'.$repair->code.'.pdf"');
         $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->assertMatchesRegularExpression('/\/MediaBox\s*\[\s*0(?:\.0+)?\s+0(?:\.0+)?\s+141\.73\d*\s+85\.04\d*\s*\]/', $response->getContent());
+        $this->assertSame(1, preg_match_all('/\/Type\s*\/Page\b/', $response->getContent()));
         $this->assertGreaterThan(1000, strlen($response->getContent()));
         $this->post('/logout');
         $this->get('/reparations/'.$repair->id.'/ticket')->assertRedirect('/login');

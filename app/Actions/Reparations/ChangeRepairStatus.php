@@ -11,22 +11,26 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 final class ChangeRepairStatus
 {
-    public function handle(int $id, RepairStatus $target, int $version, User $actor): Reparation
+    public function handle(int $id, RepairStatus $target, int $version, User $actor, ?string $dateRetrait = null): Reparation
     {
-        return DB::transaction(function () use ($id, $target, $version, $actor): Reparation {
+        return DB::transaction(function () use ($id, $target, $version, $actor, $dateRetrait): Reparation {
             $repair = Reparation::query()->lockForUpdate()->findOrFail($id);
             if ($repair->status_version !== $version) {
                 throw new ConflictHttpException('Ce dossier a été modifié depuis son affichage. Actualisez la page avant de changer le statut.');
             }
             $current = RepairStatus::from($repair->statut);
+            $previousDate = $repair->date_retrait;
+            $withdrawalDate = $target === RepairStatus::Delivered
+                ? ($dateRetrait ?? $previousDate ?? today()->toDateString()) : null;
+            if ($withdrawalDate !== null && ($withdrawalDate < substr((string) $repair->date_depot, 0, 10) || $withdrawalDate > today()->toDateString())) {
+                throw ValidationException::withMessages(['date_retrait' => 'La date de retrait doit être comprise entre le dépôt et aujourd’hui.']);
+            }
             // A repeated selection does not create a fictional change.
-            if ($current === $target) {
+            if ($current === $target && $previousDate === $withdrawalDate) {
                 return $repair;
             }
-            if ($current->next() !== $target) {
-                throw ValidationException::withMessages(['statut' => 'Transition non autorisée. Suivez les étapes : en attente, en cours, terminée, puis restituée.']);
-            }
             $repair->statut = $target->value;
+            $repair->date_retrait = $withdrawalDate;
             $repair->status_version++;
             $repair->save();
             $repair->statusChanges()->create([
@@ -35,6 +39,8 @@ final class ChangeRepairStatus
                 'from_status' => $current->value,
                 'to_status' => $target->value,
                 'version' => $repair->status_version,
+                'previous_date_retrait' => $previousDate,
+                'date_retrait' => $withdrawalDate,
             ]);
 
             return $repair;

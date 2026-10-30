@@ -14,6 +14,7 @@ import UserForm from '../../resources/js/Pages/Users/Form';
 import Catalog from '../../resources/js/Pages/Catalog/Index';
 import Dashboard from '../../resources/js/Pages/Dashboard';
 import RepairStatus from '../../resources/js/Components/RepairStatus';
+import RepairActions from '../../resources/js/Components/RepairActions';
 import ErrorPage from '../../resources/js/Pages/Error';
 
 const labels = { en_attente: 'En attente', en_cours: 'En cours', termine: 'Terminée · à restituer', restitue: 'Restituée' };
@@ -24,6 +25,24 @@ function mount(Component, props = {}, { permissions = {}, url = '/', user = null
 const pagination = (data) => ({ data, total: data.length, last_page: 1, links: [] });
 
 describe('React pages', () => {
+    it('shows row actions according to permissions and confirms deletion without typing a code', async () => {
+        const remove = vi.spyOn(router, 'delete').mockImplementation(() => {});
+        mount(() => <RepairActions repair={{ id: 42, code: 'ABCDEFGH' }} />, {}, { permissions: { 'repairs.edit': true, 'repairs.delete': true } });
+        expect(screen.getByRole('link', { name: 'Modifier' })).toHaveAttribute('href', '/reparations/42/edit');
+        await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+        expect(remove).not.toHaveBeenCalled();
+        await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+        expect(screen.queryByRole('button', { name: 'Confirmer' })).not.toBeInTheDocument();
+        await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
+        expect(remove).toHaveBeenCalledWith('/reparations/42', expect.objectContaining({ data: { confirmation: 'ABCDEFGH' } }));
+    });
+
+    it('hides row management buttons for read-only roles', () => {
+        mount(() => <RepairActions repair={{ id: 42, code: 'ABCDEFGH' }} />, {}, { permissions: { 'repairs.view': true } });
+        expect(screen.queryByRole('link', { name: 'Modifier' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'Supprimer' })).not.toBeInTheDocument();
+    });
     it('keeps home public, links to each section and escapes workshop text', () => {
         const { container } = mount(Home, { workshop: { history: { paragraphs: ['<script>alert(1)</script>'] } } });
         expect(screen.getByRole('link', { name: /Se connecter/ })).toHaveAttribute('href', '/login');
@@ -93,9 +112,9 @@ describe('React pages', () => {
         const reload = vi.spyOn(router, 'reload').mockImplementation((options) => options.onFinish?.());
         mount(() => <RepairStatus repair={{ id: 1, code: 'ABCDEFGH', statut: 'en_attente', status_version: 4 }} />);
         await userEvent.selectOptions(screen.getByLabelText('Statut de ABCDEFGH'), 'en_cours');
-        await waitFor(() => expect(put).toHaveBeenCalledWith('/reparations/1/statut', { statut: 'en_cours', status_version: 4 }, expect.any(Object)));
+        await waitFor(() => expect(put).toHaveBeenCalledWith('/reparations/1/statut', { statut: 'en_cours', status_version: 4, date_retrait: null }, expect.any(Object)));
         expect(reload).toHaveBeenCalledWith(expect.objectContaining({ only: ['reparations', 'stats', 'reparation', 'history'] }));
-        expect(screen.getByRole('status')).toHaveTextContent('Statut enregistré');
+        expect(screen.getByRole('status')).toHaveTextContent('Modification enregistrée');
     });
 
     it('prevents retrying a stale status and offers a refresh', async () => {
